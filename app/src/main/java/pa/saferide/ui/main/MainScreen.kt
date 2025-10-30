@@ -1,17 +1,21 @@
-package pa.saferide.ui.navigation
+package pa.saferide.ui.main
 
 import androidx.compose.runtime.Composable
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import pa.saferide.ui.screen.DashboardScreen
 import pa.saferide.ui.screen.LoginScreen
 import pa.saferide.ui.screen.ProfileScreen
 
 @Composable
-fun NavGraph(navController: NavHostController) {
-    NavHost(navController = navController, startDestination = "login") {
+fun MainScreen() {
+    val navController = rememberNavController()
 
+    NavHost(
+        navController = navController,
+        startDestination = "login"
+    ) {
         composable("login") {
             LoginScreen(onLoginSuccess = {
                 navController.navigate("dashboard") {
@@ -19,11 +23,9 @@ fun NavGraph(navController: NavHostController) {
                 }
             })
         }
-
         composable("dashboard") {
-            DashboardScreen(navController = navController)
+            DashboardScreen(navController)
         }
-
         composable("profile") {
             ProfileScreen(navController = navController)
         }
