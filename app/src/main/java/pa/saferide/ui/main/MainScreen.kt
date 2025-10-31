@@ -5,6 +5,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import pa.saferide.ui.screen.DashboardScreen
+import pa.saferide.ui.screen.DeviceScreen
 import pa.saferide.ui.screen.LoginScreen
 import pa.saferide.ui.screen.ProfileScreen
 
@@ -28,6 +29,9 @@ fun MainScreen() {
         }
         composable("profile") {
             ProfileScreen(navController = navController)
+        }
+        composable("device") {
+            DeviceScreen(navController = navController)
         }
     }
 }

@@ -5,6 +5,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import pa.saferide.ui.screen.DashboardScreen
+import pa.saferide.ui.screen.DeviceScreen
 import pa.saferide.ui.screen.LoginScreen
 import pa.saferide.ui.screen.ProfileScreen
 
@@ -26,6 +27,9 @@ fun NavGraph(navController: NavHostController) {
 
         composable("profile") {
             ProfileScreen(navController = navController)
+        }
+        composable("device") {
+            DeviceScreen(navController = navController)
         }
     }
 }
