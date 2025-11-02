@@ -22,6 +22,9 @@ class MainViewModel : ViewModel() {
     var loginSuccess = mutableStateOf<Boolean?>(null)
         private set
 
+    var isAdmin = mutableStateOf(false)
+        private set
+
     // ======= Fungsi untuk mengubah nilai =======
     fun onUsernameChange(newUsername: String) {
         username.value = newUsername
@@ -37,10 +40,21 @@ class MainViewModel : ViewModel() {
             isLoading.value = true
             delay(1000) // efek loading agar terlihat realistis
 
-            // Validasi login sederhana
-            if (username.value == "fida" && password.value == "123456789") {
+            val user = username.value.trim()
+            val pass = password.value.trim()
+
+            // 🧠 Admin Login
+            if (user == "admin" && pass == "admin123") {
+                isAdmin.value = true
                 loginSuccess.value = true
-            } else {
+            }
+            // 👤 User Biasa
+            else if (user == "fida" && pass == "123456789") {
+                isAdmin.value = false
+                loginSuccess.value = true
+            }
+            // ❌ Gagal login
+            else {
                 loginSuccess.value = false
             }
 

@@ -61,6 +61,7 @@ dependencies {
     implementation(libs.androidx.ui)
     implementation(libs.androidx.compose.animation)
     implementation(libs.androidx.compose.foundation)
+    implementation(libs.androidx.ui.tooling.preview)
 
 
     testImplementation(libs.junit)
@@ -70,4 +71,5 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+    debugImplementation(libs.androidx.ui.tooling)
 }
