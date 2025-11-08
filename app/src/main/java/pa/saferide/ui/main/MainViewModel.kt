@@ -49,7 +49,7 @@ class MainViewModel : ViewModel() {
                 loginSuccess.value = true
             }
             // 👤 User Biasa
-            else if (user == "fida" && pass == "123456789") {
+            else if (user == "fida" && pass == "12345") {
                 isAdmin.value = false
                 loginSuccess.value = true
             }

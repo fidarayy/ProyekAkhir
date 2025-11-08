@@ -22,10 +22,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            SafeRideTheme {
-                MainScreen()
-            }
+            val rootNavController = rememberNavController()
+            NavGraph(rootNavController = rootNavController)
         }
+
     }
 }
 

@@ -1,5 +1,6 @@
 package pa.saferide.ui.admin
 
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -42,23 +43,28 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 data class UserData(
     val username: String,
     val email: String,
-    val connected: Boolean
+    val connected: Boolean = false
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DashboardAdminScreen(navController: NavController) {
-    val users = listOf(
-        UserData("putra", "putra@gmail.com", true),
-        UserData("mufidah", "mufidah@mail.com", false),
-        UserData("ravi", "ravi@mail.com", true)
-    )
+fun DashboardAdminScreen(navController: NavController,
+                         viewModel: DashboardAdminViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
+    val users = viewModel.userList
+
+    LaunchedEffect(Unit) {
+        viewModel.fetchUsers()
+    }
+
+
 
     var visible by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     // Efek animasi masuk
     LaunchedEffect(Unit) {
@@ -78,13 +84,22 @@ fun DashboardAdminScreen(navController: NavController) {
             NavigationBar(containerColor = Color.White) {
                 NavigationBarItem(
                     selected = false,
-                    onClick = { navController.navigate("dashboard") },
+                    onClick = { navController.navigate("dashboard_admin") {
+                        launchSingleTop = true
+                    } },
                     icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
                     label = { Text("Home") }
                 )
                 NavigationBarItem(
-                    selected = true,
-                    onClick = { /* Nanti: buka dialog tambah user */ },
+                    selected = false,
+                    onClick = {
+                        scope.launch {
+                            delay(100) // beri waktu animasi/compose settle
+                            navController.navigate("add_user") {
+                                launchSingleTop = true
+                            }
+                        }
+                    },
                     icon = {
                         Box(
                             modifier = Modifier
@@ -100,7 +115,7 @@ fun DashboardAdminScreen(navController: NavController) {
                 )
                 NavigationBarItem(
                     selected = false,
-                    onClick = { navController.navigate("profile") },
+                    onClick = { navController.navigate("admin_profile") },
                     icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
                     label = { Text("Profile") }
                 )
@@ -161,6 +176,10 @@ fun DashboardAdminScreen(navController: NavController) {
                 }
 
                 Spacer(modifier = Modifier.height(60.dp)) // Jeda agar list tidak tertutup tombol bawah
+                LaunchedEffect(Unit) {
+                    Log.d("NAV_DEBUG", "DashboardAdminScreen loaded")
+                }
+
             }
         }
     }

@@ -1,7 +1,5 @@
 package pa.saferide.ui.screen
 
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,9 +8,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -34,7 +33,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -45,14 +43,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -84,59 +79,76 @@ fun DeviceScreen(navController: NavController) {
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White
-                )
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
             )
         },
-        bottomBar = {
-            // ======== Navigation Bar dengan animasi halus =========
-            var selectedItem by remember { mutableStateOf("device") }
 
+        bottomBar = {
             NavigationBar(
                 containerColor = Color.White,
-                tonalElevation = 10.dp
+                tonalElevation = 8.dp
             ) {
-                val items = listOf("dashboard", "device", "profile")
-                val icons = listOf(Icons.Default.Home, Icons.Default.Devices, Icons.Default.Person)
-                val labels = listOf("Home", "Device", "Profile")
+                NavigationBarItem(
+                    selected = false,
+                    onClick = {
+                        navController.navigate("dashboard") {
+                            popUpTo("device") { inclusive = false }
+                            launchSingleTop = true
+                        }
+                    },
+                    icon = {
+                        Icon(
+                            Icons.Default.Home,
+                            contentDescription = "Home",
+                            tint = Color.Black,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    },
+                    label = { Text("Home", color = Color.Black) }
+                )
 
-                items.forEachIndexed { index, route ->
-                    val selected = selectedItem == route
-                    val scale by animateFloatAsState(
-                        targetValue = if (selected) 1.2f else 1f,
-                        animationSpec = tween(300)
-                    )
-
-                    NavigationBarItem(
-                        selected = selected,
-                        onClick = {
-                            selectedItem = route
-                            when (route) {
-                                "dashboard" -> navController.navigate("dashboard")
-                                "device" -> {} // tetap di sini
-                                "profile" -> navController.navigate("profile")
-                            }
-                        },
-                        icon = {
+                NavigationBarItem(
+                    selected = true,
+                    onClick = { },
+                    icon = {
+                        Box(
+                            modifier = Modifier
+                                .size(56.dp)
+                                .background(Color(0xFF4A6CFF), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
                             Icon(
-                                icons[index],
-                                contentDescription = labels[index],
-                                modifier = Modifier.scale(scale),
-                                tint = if (selected) Color(0xFF4A6CFF) else Color.Gray
-                            )
-                        },
-                        label = {
-                            Text(
-                                labels[index],
-                                fontSize = 12.sp,
-                                color = if (selected) Color(0xFF4A6CFF) else Color.Gray
+                                Icons.Default.Devices,
+                                contentDescription = "Device",
+                                tint = Color.White,
+                                modifier = Modifier.size(30.dp)
                             )
                         }
-                    )
-                }
+                    },
+                    label = { Text("Device", color = Color.Black) }
+                )
+
+                NavigationBarItem(
+                    selected = false,
+                    onClick = {
+                        navController.navigate("profile") {
+                            popUpTo("device") { inclusive = false }
+                            launchSingleTop = true
+                        }
+                    },
+                    icon = {
+                        Icon(
+                            Icons.Default.Person,
+                            contentDescription = "Profile",
+                            tint = Color.Black,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    },
+                    label = { Text("Profile", color = Color.Black) }
+                )
             }
         },
+
         containerColor = Color.Transparent
     ) { paddingValues ->
         Box(
@@ -250,3 +262,5 @@ fun DeviceScreen(navController: NavController) {
         }
     }
 }
+
+

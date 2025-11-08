@@ -13,42 +13,13 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Bluetooth
-import androidx.compose.material.icons.filled.CameraAlt
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -62,7 +33,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import kotlinx.coroutines.delay
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -85,28 +55,82 @@ fun ProfileScreen(
         profileViewModel.updateProfileImage(uri)
     }
 
+    // Menentukan halaman yang aktif untuk navigasi bawah
+    val currentRoute = "profile"
+
     Scaffold(
         bottomBar = {
             NavigationBar(containerColor = Color.White, tonalElevation = 8.dp) {
+                // === HOME ===
                 NavigationBarItem(
-                    selected = false,
-                    onClick = { navController.navigate("dashboard") },
-                    icon = { Icon(Icons.Default.Home, contentDescription = "Home") }
-                )
-                NavigationBarItem(
-                    selected = false,
+                    selected = currentRoute == "dashboard",
                     onClick = {
-                        navController.navigate("device") {
+                        navController.navigate("dashboard") {
                             popUpTo("profile") { inclusive = false }
                             launchSingleTop = true
                         }
                     },
-                    icon = { Icon(Icons.Default.Bluetooth, contentDescription = "Bluetooth") }
+                    icon = {
+                        Icon(
+                            Icons.Default.Home,
+                            contentDescription = "Home",
+                            tint = if (currentRoute == "dashboard") Color(0xFF4A6CFF) else Color.Black,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    },
+                    label = {
+                        Text(
+                            "Home",
+                            color = if (currentRoute == "dashboard") Color(0xFF4A6CFF) else Color.Black
+                        )
+                    }
                 )
+
+                // === DEVICE ===
                 NavigationBarItem(
-                    selected = true,
-                    onClick = { /* Sudah di halaman ini */ },
-                    icon = { Icon(Icons.Default.Person, contentDescription = "Profile") }
+                    selected = currentRoute == "device",
+                    onClick = {
+                        navController.navigate("device") {
+                            popUpTo("dashboard") { inclusive = false }
+                            launchSingleTop = true
+                        }
+                    },
+                    icon = {
+                        Box(
+                            modifier = Modifier
+                                .size(56.dp)
+                                .background(Color(0xFF4A6CFF), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                Icons.Default.Devices,
+                                contentDescription = "Device",
+                                tint = Color.White,
+                                modifier = Modifier.size(30.dp)
+                            )
+                        }
+                    },
+                    label = { Text("Device", color = Color.Black) }
+                )
+
+                // === PROFILE ===
+                NavigationBarItem(
+                    selected = currentRoute == "profile",
+                    onClick = {
+                        // Sudah di halaman profile, tidak perlu navigasi lagi
+                    },
+                    icon = {
+                        Icon(
+                            Icons.Default.Person,
+                            contentDescription = "Profile",
+                            tint = Color.Black,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    },
+                    label = {
+                        Text("Profile", color = Color.Black
+                        )
+                    }
                 )
             }
         },
@@ -120,7 +144,9 @@ fun ProfileScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(onClick = {
+                        navController.popBackStack()
+                    }) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Kembali",
@@ -133,7 +159,6 @@ fun ProfileScreen(
         },
         containerColor = Color.Transparent
     ) { paddingValues ->
-
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -158,7 +183,6 @@ fun ProfileScreen(
                 ) {
                     Spacer(modifier = Modifier.height(32.dp))
 
-                    // Foto profil dengan animasi skala lembut
                     var imgVisible by remember { mutableStateOf(false) }
                     LaunchedEffect(Unit) {
                         delay(300)
@@ -216,7 +240,6 @@ fun ProfileScreen(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Informasi Pengguna
                     Text(
                         text = "Fida Rahman",
                         fontSize = 22.sp,
@@ -231,7 +254,6 @@ fun ProfileScreen(
 
                     Spacer(modifier = Modifier.height(40.dp))
 
-                    // Tombol Ganti Foto Profil
                     Button(
                         onClick = { imagePickerLauncher.launch("image/*") },
                         modifier = Modifier
