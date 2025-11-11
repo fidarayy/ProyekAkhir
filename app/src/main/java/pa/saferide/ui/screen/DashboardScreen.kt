@@ -161,7 +161,7 @@ fun DashboardScreen(navController: NavController) {
                     Spacer(modifier = Modifier.height(32.dp))
 
                     Text(
-                        "Device History",
+                        "Riwayat Perjalanan",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Medium,
                         color = Color.Black
@@ -185,7 +185,7 @@ fun DashboardScreen(navController: NavController) {
                             Text("Semua perangkat berfungsi normal ✅", fontWeight = FontWeight.Medium)
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = "Terakhir diperiksa: 29 Okt 2025, 09:23",
+                                text = "Terakhir connect: 29 Okt 2025, 09:23",
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }

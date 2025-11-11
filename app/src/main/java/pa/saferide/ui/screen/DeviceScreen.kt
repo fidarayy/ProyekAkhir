@@ -1,16 +1,11 @@
 package pa.saferide.ui.screen
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -19,31 +14,11 @@ import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -53,7 +28,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import kotlinx.coroutines.delay
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DeviceScreen(navController: NavController) {
@@ -62,8 +36,30 @@ fun DeviceScreen(navController: NavController) {
     var isConnecting by remember { mutableStateOf(false) }
     var connected by remember { mutableStateOf(false) }
 
+    // Gradient lembut
     val gradient = Brush.verticalGradient(
-        colors = listOf(Color(0xFFF8F9FB), Color(0xFFE8EBF0))
+        colors = listOf(Color(0xFFEEF2FF), Color(0xFFDDE7FF))
+    )
+
+    // Warna berubah sesuai status
+    val statusColor by animateColorAsState(
+        targetValue = when {
+            connected -> Color(0xFF4CAF50)
+            isConnecting -> Color(0xFF4A6CFF)
+            else -> Color.Gray
+        },
+        animationSpec = tween(600)
+    )
+
+    // Efek animasi "pulse" saat loading
+    val infiniteTransition = rememberInfiniteTransition()
+    val scale by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.05f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(700, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        )
     )
 
     Scaffold(
@@ -82,12 +78,8 @@ fun DeviceScreen(navController: NavController) {
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
             )
         },
-
         bottomBar = {
-            NavigationBar(
-                containerColor = Color.White,
-                tonalElevation = 8.dp
-            ) {
+            NavigationBar(containerColor = Color.White) {
                 NavigationBarItem(
                     selected = false,
                     onClick = {
@@ -96,20 +88,12 @@ fun DeviceScreen(navController: NavController) {
                             launchSingleTop = true
                         }
                     },
-                    icon = {
-                        Icon(
-                            Icons.Default.Home,
-                            contentDescription = "Home",
-                            tint = Color.Black,
-                            modifier = Modifier.size(28.dp)
-                        )
-                    },
-                    label = { Text("Home", color = Color.Black) }
+                    icon = { Icon(Icons.Default.Home, null, tint = Color.Black) },
+                    label = { Text("Home") }
                 )
-
                 NavigationBarItem(
                     selected = true,
-                    onClick = { },
+                    onClick = {},
                     icon = {
                         Box(
                             modifier = Modifier
@@ -117,17 +101,11 @@ fun DeviceScreen(navController: NavController) {
                                 .background(Color(0xFF4A6CFF), CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(
-                                Icons.Default.Devices,
-                                contentDescription = "Device",
-                                tint = Color.White,
-                                modifier = Modifier.size(30.dp)
-                            )
+                            Icon(Icons.Default.Devices, null, tint = Color.White)
                         }
                     },
-                    label = { Text("Device", color = Color.Black) }
+                    label = { Text("Device") }
                 )
-
                 NavigationBarItem(
                     selected = false,
                     onClick = {
@@ -136,19 +114,11 @@ fun DeviceScreen(navController: NavController) {
                             launchSingleTop = true
                         }
                     },
-                    icon = {
-                        Icon(
-                            Icons.Default.Person,
-                            contentDescription = "Profile",
-                            tint = Color.Black,
-                            modifier = Modifier.size(28.dp)
-                        )
-                    },
-                    label = { Text("Profile", color = Color.Black) }
+                    icon = { Icon(Icons.Default.Person, null, tint = Color.Black) },
+                    label = { Text("Profile") }
                 )
             }
         },
-
         containerColor = Color.Transparent
     ) { paddingValues ->
         Box(
@@ -156,7 +126,7 @@ fun DeviceScreen(navController: NavController) {
                 .fillMaxSize()
                 .background(gradient)
                 .padding(paddingValues)
-                .padding(horizontal = 24.dp, vertical = 16.dp),
+                .padding(24.dp),
             contentAlignment = Alignment.Center
         ) {
             Column(
@@ -164,13 +134,13 @@ fun DeviceScreen(navController: NavController) {
                 verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
                 Text(
-                    text = "Hubungkan Aplikasi dengan ESP32",
-                    fontSize = 20.sp,
+                    "Hubungkan Aplikasi dengan ESP32",
+                    fontSize = 22.sp,
                     color = Color.Black
                 )
 
                 Text(
-                    text = "Gunakan hotspot HP Anda sebagai sumber internet agar ESP dapat mengirim data ke aplikasi.",
+                    "Gunakan hotspot HP Anda sebagai sumber internet agar ESP dapat mengirim data ke aplikasi.",
                     fontSize = 14.sp,
                     color = Color.DarkGray
                 )
@@ -178,14 +148,14 @@ fun DeviceScreen(navController: NavController) {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .shadow(8.dp, RoundedCornerShape(20.dp)),
+                        .shadow(12.dp, RoundedCornerShape(24.dp))
+                        .background(Color.White, RoundedCornerShape(24.dp))
+                        .scale(if (isConnecting) scale else 1f),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
-                    shape = RoundedCornerShape(20.dp)
+                    shape = RoundedCornerShape(24.dp)
                 ) {
                     Column(
-                        modifier = Modifier
-                            .padding(24.dp)
-                            .fillMaxWidth(),
+                        modifier = Modifier.padding(24.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         OutlinedTextField(
@@ -242,25 +212,39 @@ fun DeviceScreen(navController: NavController) {
                     }
                 }
 
-                if (isConnecting) {
-                    LaunchedEffect(Unit) {
-                        delay(2000)
-                        isConnecting = false
-                        connected = true
-                    }
-                    CircularProgressIndicator(color = Color(0xFF4A6CFF))
-                    Text("Menghubungkan...", color = Color.Gray)
-                }
+                Crossfade(targetState = when {
+                    isConnecting -> "connecting"
+                    connected -> "connected"
+                    else -> "idle"
+                }, label = "") { state ->
+                    when (state) {
+                        "connecting" -> {
+                            LaunchedEffect(Unit) {
+                                delay(2000)
+                                isConnecting = false
+                                connected = true
+                            }
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                CircularProgressIndicator(color = Color(0xFF4A6CFF))
+                                Spacer(Modifier.height(8.dp))
+                                Text("Menghubungkan...", color = Color.Gray)
+                            }
+                        }
 
-                if (connected) {
-                    Text(
-                        text = "✅ Terhubung ke $ssid",
-                        color = Color(0xFF4A6CFF)
-                    )
+                        "connected" -> {
+                            AnimatedVisibility(visible = true) {
+                                Text(
+                                    text = "✅ Terhubung ke $ssid",
+                                    color = statusColor,
+                                    fontSize = 16.sp
+                                )
+                            }
+                        }
+
+                        else -> Unit
+                    }
                 }
             }
         }
     }
 }
-
-

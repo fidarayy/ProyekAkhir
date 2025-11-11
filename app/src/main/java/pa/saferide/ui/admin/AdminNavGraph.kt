@@ -23,5 +23,24 @@ fun AdminNavGraph(navController: NavHostController) {
         composable("edit_admin") {
             EditAdminScreen(navController = navController)
         }
+        composable("bluetooth_devices") {
+            BluetoothDeviceScreen(navController)
+        }
+
+
+//        // ✅ Tambahkan route ini:
+//        inicomposable("user_detail/{username}/{email}") { backStackEntry ->
+//            val username = backStackEntry.arguments?.getString("username") ?: ""
+//            val email = backStackEntry.arguments?.getString("email") ?: ""
+//            DetailUserScreen(username = username, email = email, navController = navController)
+//        }
+        composable(
+            "detail_user/{username}/{email}"
+        ) { backStackEntry ->
+            val username = backStackEntry.arguments?.getString("username") ?: ""
+            val email = backStackEntry.arguments?.getString("email") ?: ""
+            DetailUserScreen(username = username, email = email, navController = navController)
+        }
+
     }
 }

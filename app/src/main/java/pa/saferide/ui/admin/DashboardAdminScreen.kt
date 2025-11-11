@@ -6,6 +6,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -53,52 +54,40 @@ data class UserData(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DashboardAdminScreen(navController: NavController,
-                         viewModel: DashboardAdminViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
+fun DashboardAdminScreen(
+    navController: NavController,
+    viewModel: DashboardAdminViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+) {
     val users = viewModel.userList
-
-    LaunchedEffect(Unit) {
-        viewModel.fetchUsers()
-    }
-
-
-
-    var visible by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
-    // Efek animasi masuk
+    // Animasi muncul
+    var visible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         delay(200)
         visible = true
+        viewModel.fetchUsers()
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Dashboard Admin", color = Color.Black) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+                title = { Text("Dashboard Admin", color = Color.White) },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF1565C0))
             )
         },
         bottomBar = {
-            // 🧭 Bar navigasi bawah (Home - Add User - Profile)
             NavigationBar(containerColor = Color.White) {
                 NavigationBarItem(
                     selected = false,
-                    onClick = { navController.navigate("dashboard_admin") {
-                        launchSingleTop = true
-                    } },
+                    onClick = { navController.navigate("dashboard_admin") },
                     icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
                     label = { Text("Home") }
                 )
                 NavigationBarItem(
                     selected = false,
                     onClick = {
-                        scope.launch {
-                            delay(100) // beri waktu animasi/compose settle
-                            navController.navigate("add_user") {
-                                launchSingleTop = true
-                            }
-                        }
+                        navController.navigate("add_user")
                     },
                     icon = {
                         Box(
@@ -128,59 +117,68 @@ fun DashboardAdminScreen(navController: NavController,
             enter = fadeIn(tween(700)),
             exit = fadeOut(tween(400))
         ) {
-            Column(
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(
                         Brush.verticalGradient(
-                            listOf(Color(0xFFE3F2FD), Color.White)
+                            listOf(Color(0xFFBBDEFB), Color.White)
                         )
                     )
                     .padding(padding)
-                    .padding(16.dp)
             ) {
-                Text(
-                    text = "Daftar Pengguna Terdaftar",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                    modifier = Modifier.padding(bottom = 12.dp)
-                )
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        text = "Daftar Pengguna",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp,
+                        color = Color(0xFF0D47A1),
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
 
-                users.forEach { user ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 6.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                        elevation = CardDefaults.cardElevation(4.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                    users.forEach { user ->
+                        AnimatedVisibility(
+                            visible = visible,
+                            enter = fadeIn(tween(600))
                         ) {
-                            Column {
-                                Text(user.username, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                                Text(user.email, color = Color.Gray, fontSize = 13.sp)
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 6.dp)
+                                    .clickable {
+                                        navController.navigate("detail_user/${user.username}/${user.email}")
+                                    },
+                                shape = RoundedCornerShape(16.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color.White),
+                                elevation = CardDefaults.cardElevation(4.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column {
+                                        Text(user.username, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                                        Text(user.email, color = Color.Gray, fontSize = 13.sp)
+                                    }
+                                    Text(
+                                        if (user.connected) "Terhubung" else "Belum",
+                                        color = if (user.connected) Color(0xFF1976D2) else Color.Red,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
                             }
-                            Text(
-                                if (user.connected) "Terhubung" else "Belum",
-                                color = if (user.connected) Color(0xFF1976D2) else Color.Red,
-                                fontWeight = FontWeight.Medium
-                            )
                         }
                     }
                 }
-
-                Spacer(modifier = Modifier.height(60.dp)) // Jeda agar list tidak tertutup tombol bawah
-                LaunchedEffect(Unit) {
-                    Log.d("NAV_DEBUG", "DashboardAdminScreen loaded")
-                }
-
             }
         }
     }
 }
+
