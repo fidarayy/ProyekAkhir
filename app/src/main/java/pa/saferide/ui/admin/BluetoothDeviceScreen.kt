@@ -1,143 +1,171 @@
 package pa.saferide.ui.admin
-
 import android.Manifest
-import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
-import android.content.Intent
-import android.provider.Settings
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
+import android.content.pm.PackageManager
+import android.os.Build
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
-import kotlinx.coroutines.launch
 
-@SuppressLint("MissingPermission")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BluetoothDeviceScreen(navController: NavController) {
+fun BluetoothDeviceScreen(
+    uid: String,
+    navController: NavController,
+    onDeviceSelected: (BluetoothDevice) -> Unit
+) {
     val context = LocalContext.current
-    val bluetoothAdapter: BluetoothAdapter? = BluetoothAdapter.getDefaultAdapter()
-    val scope = rememberCoroutineScope()
-    val snackbarHostState = remember { SnackbarHostState() }
+    val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
 
-    var pairedDevices by remember { mutableStateOf<List<BluetoothDevice>>(emptyList()) }
+    var selectedDevice by remember { mutableStateOf<BluetoothDevice?>(null) }
 
-    // --- Permission Launcher untuk Android 12 ke atas ---
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestMultiplePermissions(),
-        onResult = { result ->
-            val granted = result.values.all { it }
-            if (granted) {
-                scope.launch { snackbarHostState.showSnackbar("✅ Izin Bluetooth diberikan") }
-            } else {
-                scope.launch { snackbarHostState.showSnackbar("❌ Izin Bluetooth ditolak") }
-            }
-        }
-    )
-
-    // Jalankan permission request saat screen dibuka
-    LaunchedEffect(Unit) {
-        permissionLauncher.launch(
-            arrayOf(
-                Manifest.permission.BLUETOOTH_CONNECT,
-                Manifest.permission.BLUETOOTH_SCAN,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            )
+    val hasBluetoothPermission by remember {
+        mutableStateOf(
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.BLUETOOTH_CONNECT
+                ) == PackageManager.PERMISSION_GRANTED
+            } else true
         )
     }
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Pilih Perangkat Bluetooth", color = Color.White) },
+            CenterAlignedTopAppBar(
+                title = { Text("Pilih Helmet") },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Kembali", tint = Color.White)
+                        Icon(Icons.Default.ArrowBack, null)
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF1976D2))
+                }
             )
-        },
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+        }
     ) { padding ->
 
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            if (bluetoothAdapter == null) {
-                Text("⚠️ Perangkat ini tidak mendukung Bluetooth")
-                return@Column
+
+            if (!hasBluetoothPermission) {
+                Text(
+                    "Izin Bluetooth belum diberikan",
+                    modifier = Modifier.align(Alignment.Center)
+                )
+                return@Box
             }
 
-            if (!bluetoothAdapter.isEnabled) {
-                Button(
-                    onClick = {
-                        context.startActivity(Intent(Settings.ACTION_BLUETOOTH_SETTINGS))
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2))
-                ) {
-                    Text("Aktifkan Bluetooth", color = Color.White)
+            val bondedDevices = remember {
+                try {
+                    bluetoothAdapter?.bondedDevices?.toList() ?: emptyList()
+                } catch (e: SecurityException) {
+                    emptyList()
                 }
-                return@Column
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Button(
-                onClick = {
-                    val bondedDevices = bluetoothAdapter.bondedDevices
-                    pairedDevices = bondedDevices.toList()
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0D47A1))
-            ) {
-                Text("Tampilkan Perangkat Terpasang", color = Color.White)
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            if (pairedDevices.isEmpty()) {
-                Text("Belum ada perangkat yang terhubung.")
+            if (bondedDevices.isEmpty()) {
+                Text(
+                    "Tidak ada helmet terpasang",
+                    modifier = Modifier.align(Alignment.Center)
+                )
             } else {
-                LazyColumn {
-                    items(pairedDevices) { device ->
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp)
-                                .clickable {
-                                    scope.launch {
-                                        snackbarHostState.showSnackbar("🔗 Menghubungkan ke ${device.name}...")
-                                        // di sini nanti kita tambahkan proses koneksi
-                                    }
-                                },
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFFE3F2FD))
-                        ) {
-                            Column(modifier = Modifier.padding(16.dp)) {
-                                Text("Nama: ${device.name ?: "Tidak diketahui"}", fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
-                                Text("Alamat: ${device.address}")
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(16.dp)
+                ) {
+                    items(bondedDevices) { device ->
+                        BluetoothDeviceItem(
+                            device = device,
+                            onClick = {
+                                selectedDevice = device
                             }
-                        }
+                        )
                     }
                 }
+            }
+
+            // ================= ALERT DIALOG =================
+            selectedDevice?.let { device ->
+                AlertDialog(
+                    onDismissRequest = { selectedDevice = null },
+                    title = { Text("Hubungkan Helmet") },
+                    text = {
+                        Column {
+                            Text("Nama: ${device.name ?: "Helmet ESP32"}")
+                            Text("Alamat: ${device.address}")
+                            Spacer(Modifier.height(8.dp))
+                            Text("Hubungkan helmet ini ke user?")
+                        }
+                    },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                onDeviceSelected(device)
+                                selectedDevice = null
+                            }
+                        ) {
+                            Text("Hubungkan")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { selectedDevice = null }) {
+                            Text("Batal")
+                        }
+                    }
+                )
             }
         }
     }
 }
+
+
+@Composable
+private fun BluetoothDeviceItem(
+    device: BluetoothDevice,
+    onClick: () -> Unit
+) {
+    // ⚠️ GUARD WAJIB → LINT & RUNTIME AMAN
+    val deviceName = remember {
+        try {
+            device.name ?: "Helmet ESP32"
+        } catch (e: SecurityException) {
+            "Helmet ESP32"
+        }
+    }
+
+    val deviceAddress = remember {
+        try {
+            device.address
+        } catch (e: SecurityException) {
+            "Unknown"
+        }
+    }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(deviceName, style = MaterialTheme.typography.titleMedium)
+            Text(deviceAddress, style = MaterialTheme.typography.bodySmall)
+        }
+    }
+}
+
+
+

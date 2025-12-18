@@ -1,77 +1,158 @@
 package pa.saferide.ui.admin
 
-import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import pa.saferide.ui.model.UserData
 
 class DashboardAdminViewModel : ViewModel() {
 
-    private val firestore = FirebaseFirestore.getInstance()
+    val users = mutableStateOf<List<UserData>>(emptyList())
+    val isLoading = mutableStateOf(false)
+    val errorMessage = mutableStateOf<String?>(null)
 
-    // state list yang bisa dipakai di Compose
-    val userList = mutableStateListOf<UserData>()
+    private val db: FirebaseFirestore = Firebase.firestore
 
-    // fetch semua user dari koleksi "users"
-    fun fetchUsers() {
+    // ================= LOAD USERS =================
+    fun loadUsers() {
         viewModelScope.launch {
+            isLoading.value = true
+            errorMessage.value = null
+
             try {
-                val snapshot = firestore.collection("users").get().await()
-                userList.clear()
-                for (doc in snapshot.documents) {
-                    // asumsikan dokumen sesuai struktur AdminUser
-                    val username = doc.getString("username") ?: ""
-                    val email = doc.getString("email") ?: ""
-                    // jika kamu menyimpan status connection, ambil juga, mis: "connected" boolean
-                    val connected = doc.getBoolean("connected") ?: false
-                    userList.add(UserData(username, email, connected))
+                val snapshot = db.collection("users").get().await()
+
+                users.value = snapshot.documents.mapNotNull { doc ->
+                    val data = doc.data ?: return@mapNotNull null
+
+                    UserData(
+                        uid = doc.id,
+                        username = data["username"] as? String ?: "",
+                        email = data["email"] as? String ?: "",
+                        role = data["role"] as? String ?: "user",
+                        helmetId = data["helmetId"] as? String ?: "",
+                        connected = data["connected"] as? Boolean ?: false,
+                        createdAt = data["createdAt"] as? com.google.firebase.Timestamp
+                    )
                 }
+
             } catch (e: Exception) {
-                // logging bila perlu
-                e.printStackTrace()
+                errorMessage.value = "Gagal memuat data user"
+            } finally {
+                isLoading.value = false
             }
         }
     }
 
-    /**
-     * Hapus semua dokumen yang memiliki field "username" == username
-     * (biasanya username unik; kalau pakai uid pakai field uid lebih aman)
-     */
-    fun deleteUser(
-        username: String,
-        onSuccess: () -> Unit = {},
-        onError: (Exception) -> Unit = {}
-    ) {
+    // ================= DELETE USER =================
+    fun deleteUser(uid: String) {
         viewModelScope.launch {
+            isLoading.value = true
+
             try {
-                // cari dokumen user berdasarkan username
-                val querySnapshot = firestore.collection("users")
-                    .whereEqualTo("username", username)
-                    .get()
-                    .await()
-
-                // jika tidak ada doc, tetap panggil success (atau handle sesuai kebutuhan)
-                if (querySnapshot.isEmpty) {
-                    onSuccess()
-                    // refresh list
-                    fetchUsers()
-                    return@launch
-                }
-
-                // hapus semua dokumen hasil query
-                for (doc in querySnapshot.documents) {
-                    firestore.collection("users").document(doc.id).delete().await()
-                }
-
-                // refresh list setelah hapus
-                fetchUsers()
-
-                onSuccess()
+                db.collection("users").document(uid).delete().await()
+                users.value = users.value.filterNot { it.uid == uid }
             } catch (e: Exception) {
-                onError(e)
+                errorMessage.value = "Gagal menghapus user"
+            } finally {
+                isLoading.value = false
             }
         }
+    }
+
+    // ================= PAIR HELMET =================
+    fun updateUserHelmetId(uid: String, helmetId: String) {
+        viewModelScope.launch {
+            isLoading.value = true
+            errorMessage.value = null
+
+            try {
+                db.collection("users")
+                    .document(uid)
+                    .update(
+                        mapOf(
+                            "helmetId" to helmetId,
+                            "connected" to true
+                        )
+                    )
+                    .await()
+
+                users.value = users.value.map {
+                    if (it.uid == uid) {
+                        it.copy(
+                            helmetId = helmetId,
+                            connected = true
+                        )
+                    } else it
+                }
+
+            } catch (e: Exception) {
+                errorMessage.value = "Gagal memasangkan helmet"
+            } finally {
+                isLoading.value = false
+            }
+        }
+    }
+
+    // ================= UPDATE CONNECTION (INI YANG HILANG) =================
+    fun updateUserConnection(uid: String, connected: Boolean) {
+        viewModelScope.launch {
+            try {
+                db.collection("users")
+                    .document(uid)
+                    .update("connected", connected)
+                    .await()
+
+                users.value = users.value.map {
+                    if (it.uid == uid) it.copy(connected = connected)
+                    else it
+                }
+
+            } catch (e: Exception) {
+                errorMessage.value = "Gagal update status koneksi"
+            }
+        }
+    }
+
+    // ================= UNPAIR HELMET =================
+    fun removeHelmetFromUser(uid: String) {
+        viewModelScope.launch {
+            isLoading.value = true
+
+            try {
+                db.collection("users")
+                    .document(uid)
+                    .update(
+                        mapOf(
+                            "helmetId" to "",
+                            "connected" to false
+                        )
+                    )
+                    .await()
+
+                users.value = users.value.map {
+                    if (it.uid == uid) {
+                        it.copy(
+                            helmetId = "",
+                            connected = false
+                        )
+                    } else it
+                }
+
+            } catch (e: Exception) {
+                errorMessage.value = "Gagal melepas helmet"
+            } finally {
+                isLoading.value = false
+            }
+        }
+    }
+
+    fun clearError() {
+        errorMessage.value = null
     }
 }

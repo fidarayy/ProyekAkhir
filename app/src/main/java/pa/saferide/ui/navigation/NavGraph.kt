@@ -2,16 +2,15 @@ package pa.saferide.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import pa.saferide.ui.admin.AddUserScreen
+import androidx.navigation.navArgument
 import pa.saferide.ui.admin.AdminNavGraph
-import pa.saferide.ui.admin.DashboardAdminScreen
-import pa.saferide.ui.screen.DashboardScreen
-import pa.saferide.ui.screen.DeviceScreen
+import pa.saferide.ui.admin.BluetoothDeviceScreen
+import pa.saferide.ui.admin.DetailUserScreen
 import pa.saferide.ui.screen.LoginScreen
-import pa.saferide.ui.screen.ProfileScreen
 import pa.saferide.ui.screen.UserNavGraph
 
 @Composable

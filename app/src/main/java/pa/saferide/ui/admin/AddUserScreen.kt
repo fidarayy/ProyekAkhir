@@ -38,9 +38,12 @@ fun AddUserScreen(
     var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var showPassword by remember { mutableStateOf(false) }
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val user = AdminUser(username, email, password)
+
 
     val gradientBackground = Brush.verticalGradient(
         colors = listOf(Color(0xFF1976D2), Color(0xFFE3F2FD))
@@ -137,6 +140,16 @@ fun AddUserScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Checkbox(
+                        checked = showPassword,
+                        onCheckedChange = { showPassword = it }
+                    )
+                    Text("Tampilkan Password", modifier = Modifier.padding(start = 8.dp))
+                }
                 Text(
                     "Isi data pengguna baru",
                     fontSize = 20.sp,
@@ -192,28 +205,36 @@ fun AddUserScreen(
                 Button(
                     onClick = {
                         if (username.isNotBlank() && email.isNotBlank() && password.isNotBlank()) {
-                            val user = AdminUser(username, email, password)
+
+                            val newUser = AdminUser(
+                                username = username,
+                                email = email,
+                                password = password,
+                                role = "user",      // otomatis
+                                connected = false   // otomatis
+                            )
+
                             viewModel.addUser(
-                                user,
-                                onSuccess = {},
+                                user = newUser,
+                                onSuccess = {
+                                    scope.launch {
+                                        snackbarHostState.showSnackbar("✅ Pengguna berhasil ditambahkan!")
+                                        delay(700)
+                                        navController.navigate("dashboard_admin") {
+                                            popUpTo("add_user") { inclusive = true }
+                                            launchSingleTop = true
+                                        }
+                                    }
+                                },
                                 onError = { e ->
                                     scope.launch {
-                                        snackbarHostState.showSnackbar("❌ Gagal menambahkan: ${e.message}")
+                                        snackbarHostState.showSnackbar("❌ Gagal: ${e.message}")
                                     }
                                 }
                             )
-
-                            scope.launch {
-                                snackbarHostState.showSnackbar("✅ Pengguna berhasil ditambahkan!")
-                                delay(700)
-                                navController.navigate("dashboard_admin") {
-                                    popUpTo("add_user") { inclusive = true }
-                                    launchSingleTop = true
-                                }
-                            }
                         } else {
                             scope.launch {
-                                snackbarHostState.showSnackbar("⚠️ Semua field wajib diisi.")
+                                snackbarHostState.showSnackbar("⚠ Semua field wajib diisi.")
                             }
                         }
                     },

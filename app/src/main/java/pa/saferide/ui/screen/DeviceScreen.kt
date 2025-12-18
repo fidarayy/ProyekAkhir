@@ -31,132 +31,86 @@ import kotlinx.coroutines.delay
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DeviceScreen(navController: NavController) {
+
     var ssid by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var isConnecting by remember { mutableStateOf(false) }
     var connected by remember { mutableStateOf(false) }
 
-    // Gradient lembut
     val gradient = Brush.verticalGradient(
-        colors = listOf(Color(0xFFEEF2FF), Color(0xFFDDE7FF))
-    )
-
-    // Warna berubah sesuai status
-    val statusColor by animateColorAsState(
-        targetValue = when {
-            connected -> Color(0xFF4CAF50)
-            isConnecting -> Color(0xFF4A6CFF)
-            else -> Color.Gray
-        },
-        animationSpec = tween(600)
-    )
-
-    // Efek animasi "pulse" saat loading
-    val infiniteTransition = rememberInfiniteTransition()
-    val scale by infiniteTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = 1.05f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(700, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        )
+        colors = listOf(Color(0xFFB6CCFF), Color(0xFFE3ECFF))
     )
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Koneksi Internet", color = Color.Black) },
+                title = { Text("Koneksi Internet", color = Color.White) },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Kembali",
-                            tint = Color.Black
+                            contentDescription = "Back",
+                            tint = Color.White
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color(0xFF1E88E5)
+                )
             )
         },
-        bottomBar = {
-            NavigationBar(containerColor = Color.White) {
-                NavigationBarItem(
-                    selected = false,
-                    onClick = {
-                        navController.navigate("dashboard") {
-                            popUpTo("device") { inclusive = false }
-                            launchSingleTop = true
-                        }
-                    },
-                    icon = { Icon(Icons.Default.Home, null, tint = Color.Black) },
-                    label = { Text("Home") }
-                )
-                NavigationBarItem(
-                    selected = true,
-                    onClick = {},
-                    icon = {
-                        Box(
-                            modifier = Modifier
-                                .size(56.dp)
-                                .background(Color(0xFF4A6CFF), CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(Icons.Default.Devices, null, tint = Color.White)
-                        }
-                    },
-                    label = { Text("Device") }
-                )
-                NavigationBarItem(
-                    selected = false,
-                    onClick = {
-                        navController.navigate("profile") {
-                            popUpTo("device") { inclusive = false }
-                            launchSingleTop = true
-                        }
-                    },
-                    icon = { Icon(Icons.Default.Person, null, tint = Color.Black) },
-                    label = { Text("Profile") }
-                )
-            }
-        },
+        bottomBar = { BottomMenu(navController) },
         containerColor = Color.Transparent
-    ) { paddingValues ->
+    ) { padding ->
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(gradient)
-                .padding(paddingValues)
-                .padding(24.dp),
-            contentAlignment = Alignment.Center
+                .padding(padding)
         ) {
+
+            // ---------------------- Dekorasi Lingkaran ----------------------
+            Box(
+                modifier = Modifier
+                    .size(260.dp)
+                    .offset(x = (-40).dp, y = 60.dp)
+                    .background(Color.White.copy(alpha = 0.25f), CircleShape)
+            )
+
+            Box(
+                modifier = Modifier
+                    .size(200.dp)
+                    .offset(x = 190.dp, y = 220.dp)
+                    .background(Color.White.copy(alpha = 0.25f), CircleShape)
+            )
+
+            // -------------------------- Konten Utama -------------------------
             Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(24.dp)
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 24.dp)
+                    .padding(top = 40.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(
-                    "Hubungkan Aplikasi dengan ESP32",
-                    fontSize = 22.sp,
-                    color = Color.Black
-                )
 
                 Text(
-                    "Gunakan hotspot HP Anda sebagai sumber internet agar ESP dapat mengirim data ke aplikasi.",
-                    fontSize = 14.sp,
-                    color = Color.DarkGray
+                    "Isi data koneksi WiFi",
+                    fontSize = 20.sp,
+                    color = Color(0xFF0D47A1)
                 )
+
+                Spacer(Modifier.height(20.dp))
 
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .shadow(12.dp, RoundedCornerShape(24.dp))
-                        .background(Color.White, RoundedCornerShape(24.dp))
-                        .scale(if (isConnecting) scale else 1f),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    shape = RoundedCornerShape(24.dp)
+                        .shadow(12.dp, RoundedCornerShape(22.dp)),
+                    colors = CardDefaults.cardColors(Color.White),
+                    shape = RoundedCornerShape(22.dp)
                 ) {
                     Column(
-                        modifier = Modifier.padding(24.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                        modifier = Modifier.padding(24.dp)
                     ) {
                         OutlinedTextField(
                             value = ssid,
@@ -165,6 +119,8 @@ fun DeviceScreen(navController: NavController) {
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth()
                         )
+
+                        Spacer(Modifier.height(16.dp))
 
                         OutlinedTextField(
                             value = password,
@@ -175,76 +131,85 @@ fun DeviceScreen(navController: NavController) {
                             modifier = Modifier.fillMaxWidth()
                         )
 
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            OutlinedButton(
-                                onClick = {
-                                    ssid = ""
-                                    password = ""
-                                    connected = false
-                                },
-                                colors = ButtonDefaults.outlinedButtonColors(
-                                    contentColor = Color(0xFF4A6CFF)
-                                ),
-                                shape = RoundedCornerShape(12.dp)
-                            ) {
-                                Icon(Icons.Default.Refresh, contentDescription = "Reset")
-                                Spacer(Modifier.width(8.dp))
-                                Text("Reset")
-                            }
+                        Spacer(Modifier.height(22.dp))
 
-                            Button(
-                                onClick = {
-                                    if (ssid.isNotBlank() && password.isNotBlank()) {
-                                        isConnecting = true
-                                    }
-                                },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color(0xFF4A6CFF)
-                                ),
-                                shape = RoundedCornerShape(12.dp)
-                            ) {
-                                Text("Connect", color = Color.White)
-                            }
+                        Button(
+                            onClick = {
+                                if (ssid.isNotBlank() && password.isNotBlank()) {
+                                    isConnecting = true
+                                }
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF1E88E5)
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text("Connect", fontSize = 16.sp, color = Color.White)
                         }
                     }
                 }
 
-                Crossfade(targetState = when {
-                    isConnecting -> "connecting"
-                    connected -> "connected"
-                    else -> "idle"
-                }, label = "") { state ->
-                    when (state) {
-                        "connecting" -> {
-                            LaunchedEffect(Unit) {
-                                delay(2000)
-                                isConnecting = false
-                                connected = true
-                            }
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                CircularProgressIndicator(color = Color(0xFF4A6CFF))
-                                Spacer(Modifier.height(8.dp))
-                                Text("Menghubungkan...", color = Color.Gray)
-                            }
+                Spacer(Modifier.height(20.dp))
+
+                when {
+                    isConnecting -> {
+                        CircularProgressIndicator(color = Color(0xFF1E88E5))
+                        Spacer(Modifier.height(6.dp))
+
+                        LaunchedEffect(Unit) {
+                            delay(1500)
+                            isConnecting = false
+                            connected = true
                         }
 
-                        "connected" -> {
-                            AnimatedVisibility(visible = true) {
-                                Text(
-                                    text = "✅ Terhubung ke $ssid",
-                                    color = statusColor,
-                                    fontSize = 16.sp
-                                )
-                            }
-                        }
-
-                        else -> Unit
+                        Text("Menghubungkan...", color = Color.Gray)
                     }
+
+                    connected -> Text(
+                        "✓ Terhubung ke $ssid",
+                        color = Color(0xFF4CAF50),
+                        fontSize = 16.sp
+                    )
                 }
             }
         }
     }
 }
+
+@Composable
+fun BottomMenu(navController: NavController) {
+    NavigationBar(containerColor = Color.White) {
+        NavigationBarItem(
+            selected = false,
+            onClick = { navController.navigate("dashboard") },
+            icon = { Icon(Icons.Default.Home, contentDescription = null) },
+            label = { Text("Home") }
+        )
+        NavigationBarItem(
+            selected = true,
+            onClick = {},
+            icon = {
+                Box(
+                    Modifier
+                        .size(56.dp)
+                        .background(Color(0xFF4A6CFF), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Default.Devices, contentDescription = null, tint = Color.White)
+                }
+            },
+            label = { Text("Device") }
+        )
+        NavigationBarItem(
+            selected = false,
+            onClick = { navController.navigate("profile") },
+            icon = { Icon(Icons.Default.Person, contentDescription = null) },
+            label = { Text("Profile") }
+        )
+    }
+}
+
+
