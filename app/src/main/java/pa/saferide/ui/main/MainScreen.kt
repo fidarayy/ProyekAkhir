@@ -12,14 +12,16 @@ import pa.saferide.ui.screen.ProfileScreen
 
 @Composable
 fun MainScreen() {
+
     val navController = rememberNavController()
 
     NavHost(
         navController = navController,
         startDestination = "login"
     ) {
+
+        // ================= LOGIN =================
         composable("login") {
-            // 🧠 LoginScreen sekarang mendukung dua callback:
             LoginScreen(
                 onLoginSuccessUser = {
                     navController.navigate("dashboard") {
@@ -34,8 +36,9 @@ fun MainScreen() {
             )
         }
 
+        // ================= USER =================
         composable("dashboard") {
-            DashboardScreen(navController)
+            DashboardScreen(navController = navController)
         }
 
         composable("profile") {
@@ -46,6 +49,7 @@ fun MainScreen() {
             DeviceScreen(navController = navController)
         }
 
+        // ================= ADMIN =================
         composable("dashboard_admin") {
             DashboardAdminScreen(navController = navController)
         }

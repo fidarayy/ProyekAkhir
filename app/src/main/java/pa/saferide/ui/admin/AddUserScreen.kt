@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -42,8 +43,6 @@ fun AddUserScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    val user = AdminUser(username, email, password)
-
 
     val gradientBackground = Brush.verticalGradient(
         colors = listOf(Color(0xFF1976D2), Color(0xFFE3F2FD))
@@ -73,16 +72,22 @@ fun AddUserScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Kembali", tint = Color.White)
+                        Icon(
+                            Icons.Default.ArrowBack,
+                            contentDescription = "Kembali",
+                            tint = Color.White
+                        )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF1565C0))
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color(0xFF1565C0)
+                )
             )
         },
 
-        // 🧭 Bottom Navigation Bar
         bottomBar = {
             NavigationBar(containerColor = Color.White) {
+
                 NavigationBarItem(
                     selected = false,
                     onClick = {
@@ -91,9 +96,10 @@ fun AddUserScreen(
                             launchSingleTop = true
                         }
                     },
-                    icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
+                    icon = { Icon(Icons.Default.Home, null) },
                     label = { Text("Home") }
                 )
+
                 NavigationBarItem(
                     selected = true,
                     onClick = {},
@@ -102,26 +108,27 @@ fun AddUserScreen(
                             modifier = Modifier
                                 .clip(CircleShape)
                                 .background(Color(0xFF1976D2))
-                                .padding(8.dp),
-                            contentAlignment = Alignment.Center
+                                .padding(8.dp)
                         ) {
-                            Icon(Icons.Default.Add, contentDescription = "Add User", tint = Color.White)
+                            Icon(Icons.Default.Add, null, tint = Color.White)
                         }
                     },
                     label = { Text("Add User") }
                 )
+
                 NavigationBarItem(
                     selected = false,
                     onClick = { navController.navigate("admin_profile") },
-                    icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
+                    icon = { Icon(Icons.Default.Person, null) },
                     label = { Text("Profile") }
                 )
             }
         },
 
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = Color.Transparent
     ) { paddingValues ->
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -129,6 +136,7 @@ fun AddUserScreen(
                 .padding(paddingValues),
             contentAlignment = Alignment.Center
         ) {
+
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -137,9 +145,55 @@ fun AddUserScreen(
                     .clip(RoundedCornerShape(24.dp))
                     .background(Color.White.copy(alpha = 0.95f))
                     .padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
+
+                Text(
+                    "Isi data pengguna baru",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF0D47A1)
+                )
+
+                Spacer(Modifier.height(16.dp))
+
+                OutlinedTextField(
+                    value = username,
+                    onValueChange = { username = it },
+                    label = { Text("Username") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                Spacer(Modifier.height(12.dp))
+
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    label = { Text("Email") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                Spacer(Modifier.height(12.dp))
+
+                // 🔐 PASSWORD FIELD (FIXED)
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = { Text("Password") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+
+                    visualTransformation = if (showPassword)
+                        VisualTransformation.None
+                    else
+                        PasswordVisualTransformation()
+                )
+
+                Spacer(Modifier.height(6.dp))
+
+                // ☑️ CHECKBOX SHOW PASSWORD
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()
@@ -148,59 +202,10 @@ fun AddUserScreen(
                         checked = showPassword,
                         onCheckedChange = { showPassword = it }
                     )
-                    Text("Tampilkan Password", modifier = Modifier.padding(start = 8.dp))
+                    Text("Tampilkan Password")
                 }
-                Text(
-                    "Isi data pengguna baru",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF0D47A1)
-                )
 
-                Spacer(modifier = Modifier.height(16.dp))
-
-                OutlinedTextField(
-                    value = username,
-                    onValueChange = { username = it },
-                    label = { Text("Username") },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFF1565C0),
-                        focusedLabelColor = Color(0xFF1565C0)
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                OutlinedTextField(
-                    value = email,
-                    onValueChange = { email = it },
-                    label = { Text("Email") },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFF1565C0),
-                        focusedLabelColor = Color(0xFF1565C0)
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                OutlinedTextField(
-                    value = password,
-                    onValueChange = { password = it },
-                    label = { Text("Password") },
-                    visualTransformation = PasswordVisualTransformation(),
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFF1565C0),
-                        focusedLabelColor = Color(0xFF1565C0)
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(Modifier.height(24.dp))
 
                 Button(
                     onClick = {
@@ -210,75 +215,58 @@ fun AddUserScreen(
                                 username = username,
                                 email = email,
                                 password = password,
-                                role = "user",      // otomatis
-                                connected = false   // otomatis
+                                role = "user",
+                                connected = false
                             )
 
                             viewModel.addUser(
                                 user = newUser,
                                 onSuccess = {
                                     scope.launch {
-                                        snackbarHostState.showSnackbar("✅ Pengguna berhasil ditambahkan!")
-                                        delay(700)
+                                        snackbarHostState.showSnackbar("✅ Pengguna berhasil ditambahkan")
+                                        delay(600)
                                         navController.navigate("dashboard_admin") {
                                             popUpTo("add_user") { inclusive = true }
-                                            launchSingleTop = true
                                         }
                                     }
                                 },
                                 onError = { e ->
                                     scope.launch {
-                                        snackbarHostState.showSnackbar("❌ Gagal: ${e.message}")
+                                        snackbarHostState.showSnackbar("❌ ${e.message}")
                                     }
                                 }
                             )
+
                         } else {
                             scope.launch {
-                                snackbarHostState.showSnackbar("⚠ Semua field wajib diisi.")
+                                snackbarHostState.showSnackbar("⚠ Semua field wajib diisi")
                             }
                         }
                     },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp),
+                    shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFF1565C0),
                         contentColor = Color.White
-                    ),
-                    shape = RoundedCornerShape(12.dp)
+                    )
                 ) {
-                    Text("Tambah Pengguna", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    Text("Tambah Pengguna", fontWeight = FontWeight.Bold)
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(Modifier.height(12.dp))
 
-                AnimatedVisibility(visible = username.isNotBlank() || email.isNotBlank() || password.isNotBlank()) {
+                AnimatedVisibility(
+                    visible = username.isNotBlank() || email.isNotBlank() || password.isNotBlank()
+                ) {
                     Text(
                         "Pastikan data sudah benar sebelum menyimpan.",
-                        color = Color.Gray,
-                        fontSize = 13.sp
+                        fontSize = 13.sp,
+                        color = Color.Gray
                     )
                 }
             }
-
-            // Ornamen dekoratif
-            Box(
-                modifier = Modifier
-                    .size(200.dp)
-                    .clip(CircleShape)
-                    .background(Color(0xFF1565C0).copy(alpha = 0.15f))
-                    .align(Alignment.TopEnd)
-                    .offset(x = 60.dp, y = (-60).dp)
-            )
-
-            Box(
-                modifier = Modifier
-                    .size(150.dp)
-                    .clip(CircleShape)
-                    .background(Color(0xFF0D47A1).copy(alpha = 0.1f))
-                    .align(Alignment.BottomStart)
-                    .offset(x = (-40).dp, y = 80.dp)
-            )
         }
     }
 }

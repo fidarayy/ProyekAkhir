@@ -1,6 +1,7 @@
 package pa.saferide.ui.admin
 
 import android.bluetooth.BluetoothDevice
+
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -12,7 +13,6 @@ import androidx.navigation.navArgument
 @Composable
 fun AdminNavGraph(navController: NavHostController) {
 
-    // ✅ SATU-SATUNYA ViewModel
     val dashboardViewModel: DashboardAdminViewModel = viewModel()
 
     NavHost(
@@ -35,6 +35,11 @@ fun AdminNavGraph(navController: NavHostController) {
             AdminProfileScreen(navController)
         }
 
+        // ✅ TAMBAHKAN INI
+        composable("edit_admin") {
+            EditAdminScreen(navController)
+        }
+
         composable(
             route = "user_detail/{uid}",
             arguments = listOf(
@@ -51,7 +56,6 @@ fun AdminNavGraph(navController: NavHostController) {
             )
         }
 
-        // ================= BLUETOOTH DEVICE =================
         composable(
             route = "bluetooth_device/{uid}",
             arguments = listOf(
@@ -63,20 +67,7 @@ fun AdminNavGraph(navController: NavHostController) {
 
             BluetoothDeviceScreen(
                 uid = uid,
-                navController = navController,
-
-                // ✅ SATU-SATUNYA AKSI YANG BENAR
-                onDeviceSelected = { device: BluetoothDevice ->
-
-                    val helmetId = device.address // stabil & unik
-
-                    dashboardViewModel.updateUserHelmetId(
-                        uid = uid,
-                        helmetId = helmetId
-                    )
-
-                    navController.navigateUp()
-                }
+                navController = navController
             )
         }
 
@@ -90,3 +81,4 @@ fun AdminNavGraph(navController: NavHostController) {
         }
     }
 }
+

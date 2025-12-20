@@ -86,6 +86,7 @@ dependencies {
 
     // 🔧 FIREBASE
     implementation(platform("com.google.firebase:firebase-bom:33.0.0"))
+    implementation("com.google.firebase:firebase-database-ktx")
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
     implementation("com.google.firebase:firebase-storage-ktx")
@@ -107,6 +108,9 @@ dependencies {
 
     // 🔧 WORK MANAGER (untuk background tasks future)
     implementation("androidx.work:work-runtime-ktx:2.9.0")
+    implementation(libs.androidx.foundation)
+    implementation(libs.ui)
+    implementation(libs.androidx.compose.ui.text)
 
     // 🔧 TESTING
     testImplementation(libs.junit)

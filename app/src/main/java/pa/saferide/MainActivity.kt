@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
+import com.google.firebase.auth.FirebaseAuth
 import pa.saferide.ui.main.MainScreen
 import pa.saferide.ui.navigation.NavGraph
 import pa.saferide.ui.screen.LoginScreen
@@ -20,6 +21,7 @@ import pa.saferide.ui.theme.SafeRideTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        FirebaseAuth.getInstance().signOut()
         enableEdgeToEdge()
         setContent {
             val rootNavController = rememberNavController()

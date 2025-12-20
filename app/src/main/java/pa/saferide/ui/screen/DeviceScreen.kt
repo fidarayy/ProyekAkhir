@@ -1,10 +1,14 @@
 package pa.saferide.ui.screen
 
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothDevice
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.Crossfade
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.*
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -13,16 +17,14 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -32,184 +34,216 @@ import kotlinx.coroutines.delay
 @Composable
 fun DeviceScreen(navController: NavController) {
 
-    var ssid by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var isConnecting by remember { mutableStateOf(false) }
-    var connected by remember { mutableStateOf(false) }
+    val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+    val devices = remember {
+        bluetoothAdapter?.bondedDevices?.toList() ?: emptyList()
+    }
 
-    val gradient = Brush.verticalGradient(
-        colors = listOf(Color(0xFFB6CCFF), Color(0xFFE3ECFF))
+    var selectedDevice by remember { mutableStateOf<BluetoothDevice?>(null) }
+    var showDialog by remember { mutableStateOf(false) }
+    var visible by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        delay(200)
+        visible = true
+    }
+
+    val background = Brush.verticalGradient(
+        listOf(Color(0xFFE3F2FD), Color.White)
     )
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Koneksi Internet", color = Color.White) },
+                title = { Text("Pilih Perangkat", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = Color.White
-                        )
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF1E88E5)
-                )
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
             )
         },
-        bottomBar = { BottomMenu(navController) },
-        containerColor = Color.Transparent
-    ) { padding ->
+        bottomBar = {
+            NavigationBar(containerColor = Color.White, tonalElevation = 8.dp) {
+
+                NavigationBarItem(
+                    selected = false,
+                    onClick = {
+                        navController.navigate("dashboard") {
+                            popUpTo("device") { inclusive = false }
+                        }
+                    },
+                    icon = { Icon(Icons.Default.Home, null) },
+                    label = { Text("Home") }
+                )
+
+                NavigationBarItem(
+                    selected = true,
+                    onClick = {},
+                    icon = {
+                        Box(
+                            modifier = Modifier
+                                .size(56.dp)
+                                .background(Color(0xFF4A6CFF), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                Icons.Default.Devices,
+                                contentDescription = null,
+                                tint = Color.White
+                            )
+                        }
+                    },
+                    label = { Text("Device") }
+                )
+
+                NavigationBarItem(
+                    selected = false,
+                    onClick = {
+                        navController.navigate("profile") {
+                            popUpTo("device") { inclusive = false }
+                        }
+                    },
+                    icon = { Icon(Icons.Default.Person, null) },
+                    label = { Text("Profile") }
+                )
+            }
+        }
+    ) { paddingValues ->
 
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(gradient)
-                .padding(padding)
+                .background(background)
+                .padding(paddingValues)
         ) {
 
-            // ---------------------- Dekorasi Lingkaran ----------------------
-            Box(
-                modifier = Modifier
-                    .size(260.dp)
-                    .offset(x = (-40).dp, y = 60.dp)
-                    .background(Color.White.copy(alpha = 0.25f), CircleShape)
-            )
-
-            Box(
-                modifier = Modifier
-                    .size(200.dp)
-                    .offset(x = 190.dp, y = 220.dp)
-                    .background(Color.White.copy(alpha = 0.25f), CircleShape)
-            )
-
-            // -------------------------- Konten Utama -------------------------
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 24.dp)
-                    .padding(top = 40.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+            AnimatedVisibility(
+                visible = visible,
+                enter = fadeIn(tween(600)),
+                exit = fadeOut()
             ) {
 
-                Text(
-                    "Isi data koneksi WiFi",
-                    fontSize = 20.sp,
-                    color = Color(0xFF0D47A1)
-                )
-
-                Spacer(Modifier.height(20.dp))
-
-                Card(
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .shadow(12.dp, RoundedCornerShape(22.dp)),
-                    colors = CardDefaults.cardColors(Color.White),
-                    shape = RoundedCornerShape(22.dp)
+                        .fillMaxSize()
+                        .padding(20.dp)
                 ) {
-                    Column(
-                        modifier = Modifier.padding(24.dp)
-                    ) {
-                        OutlinedTextField(
-                            value = ssid,
-                            onValueChange = { ssid = it },
-                            label = { Text("Nama Koneksi (SSID)") },
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth()
+
+                    Text(
+                        "Perangkat Tersedia",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF0D2540)
+                    )
+
+                    Spacer(Modifier.height(16.dp))
+
+                    if (devices.isEmpty()) {
+                        Text(
+                            "Tidak ada perangkat Bluetooth",
+                            color = Color.Gray,
+                            modifier = Modifier.align(Alignment.CenterHorizontally)
                         )
-
-                        Spacer(Modifier.height(16.dp))
-
-                        OutlinedTextField(
-                            value = password,
-                            onValueChange = { password = it },
-                            label = { Text("Kata Sandi") },
-                            singleLine = true,
-                            visualTransformation = PasswordVisualTransformation(),
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        Spacer(Modifier.height(22.dp))
-
-                        Button(
-                            onClick = {
-                                if (ssid.isNotBlank() && password.isNotBlank()) {
-                                    isConnecting = true
-                                }
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(50.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF1E88E5)
-                            ),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Text("Connect", fontSize = 16.sp, color = Color.White)
-                        }
                     }
-                }
 
-                Spacer(Modifier.height(20.dp))
+                    devices.forEachIndexed { index, device ->
 
-                when {
-                    isConnecting -> {
-                        CircularProgressIndicator(color = Color(0xFF1E88E5))
-                        Spacer(Modifier.height(6.dp))
+                        var itemVisible by remember { mutableStateOf(false) }
 
                         LaunchedEffect(Unit) {
-                            delay(1500)
-                            isConnecting = false
-                            connected = true
+                            delay(index * 100L)
+                            itemVisible = true
                         }
 
-                        Text("Menghubungkan...", color = Color.Gray)
-                    }
+                        val scale by animateFloatAsState(
+                            targetValue = if (itemVisible) 1f else 0.9f,
+                            animationSpec = tween(400),
+                            label = ""
+                        )
 
-                    connected -> Text(
-                        "✓ Terhubung ke $ssid",
-                        color = Color(0xFF4CAF50),
-                        fontSize = 16.sp
-                    )
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp)
+                                .scale(scale)
+                                .clickable {
+                                    selectedDevice = device
+                                    showDialog = true
+                                },
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = Color.White
+                            ),
+                            elevation = CardDefaults.cardElevation(6.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(48.dp)
+                                        .background(
+                                            Color(0xFF4A6CFF),
+                                            CircleShape
+                                        ),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        Icons.Default.Devices,
+                                        contentDescription = null,
+                                        tint = Color.White
+                                    )
+                                }
+
+                                Spacer(Modifier.width(16.dp))
+
+                                Column {
+                                    Text(
+                                        device.name ?: "Unknown Device",
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                    Text(
+                                        device.address,
+                                        fontSize = 12.sp,
+                                        color = Color.Gray
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
     }
-}
 
-@Composable
-fun BottomMenu(navController: NavController) {
-    NavigationBar(containerColor = Color.White) {
-        NavigationBarItem(
-            selected = false,
-            onClick = { navController.navigate("dashboard") },
-            icon = { Icon(Icons.Default.Home, contentDescription = null) },
-            label = { Text("Home") }
-        )
-        NavigationBarItem(
-            selected = true,
-            onClick = {},
-            icon = {
-                Box(
-                    Modifier
-                        .size(56.dp)
-                        .background(Color(0xFF4A6CFF), CircleShape),
-                    contentAlignment = Alignment.Center
+    // ================= DIALOG =================
+    if (showDialog && selectedDevice != null) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text("Konfirmasi") },
+            text = {
+                Text("Hubungkan ke perangkat ${selectedDevice!!.name}?")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDialog = false
+                        navController.navigate(
+                            "connection/${selectedDevice!!.address}"
+                        )
+                    }
                 ) {
-                    Icon(Icons.Default.Devices, contentDescription = null, tint = Color.White)
+                    Text("Hubungkan")
                 }
             },
-            label = { Text("Device") }
-        )
-        NavigationBarItem(
-            selected = false,
-            onClick = { navController.navigate("profile") },
-            icon = { Icon(Icons.Default.Person, contentDescription = null) },
-            label = { Text("Profile") }
+            dismissButton = {
+                TextButton(onClick = { showDialog = false }) {
+                    Text("Batal")
+                }
+            }
         )
     }
 }
-
-

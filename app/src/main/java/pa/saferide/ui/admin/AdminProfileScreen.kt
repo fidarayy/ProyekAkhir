@@ -1,6 +1,5 @@
 package pa.saferide.ui.admin
 
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -19,29 +18,53 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.google.firebase.auth.FirebaseAuth
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminProfileScreen(navController: NavController) {
 
+    // ================= FIREBASE AUTH =================
+    val admin = FirebaseAuth.getInstance().currentUser
+
+    val adminName =
+        admin?.displayName
+            ?: admin?.email?.substringBefore("@")
+            ?: "Admin"
+
+    val adminEmail =
+        admin?.email ?: "-"
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Profil Admin", color = Color.Black) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.White
+                )
             )
         },
         bottomBar = {
             NavigationBar(containerColor = Color.White) {
+
                 NavigationBarItem(
                     selected = false,
-                    onClick = { navController.navigate("dashboard_admin") { launchSingleTop = true } },
+                    onClick = {
+                        navController.navigate("dashboard_admin") {
+                            launchSingleTop = true
+                        }
+                    },
                     icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
                     label = { Text("Home") }
                 )
+
                 NavigationBarItem(
                     selected = false,
-                    onClick = { navController.navigate("add_user") { launchSingleTop = true } },
+                    onClick = {
+                        navController.navigate("add_user") {
+                            launchSingleTop = true
+                        }
+                    },
                     icon = {
                         Box(
                             modifier = Modifier
@@ -50,21 +73,33 @@ fun AdminProfileScreen(navController: NavController) {
                                 .padding(8.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(Icons.Default.Add, contentDescription = "Add User", tint = Color.White)
+                            Icon(
+                                Icons.Default.Add,
+                                contentDescription = "Add User",
+                                tint = Color.White
+                            )
                         }
                     },
                     label = { Text("Add User") }
                 )
+
                 NavigationBarItem(
                     selected = true,
                     onClick = { /* sudah di profile */ },
-                    icon = { Icon(Icons.Default.Person, contentDescription = "Profile", tint = Color(0xFF1976D2)) },
+                    icon = {
+                        Icon(
+                            Icons.Default.Person,
+                            contentDescription = "Profile",
+                            tint = Color(0xFF1976D2)
+                        )
+                    },
                     label = { Text("Profile", color = Color.Black) }
                 )
             }
         },
         containerColor = Color.Transparent
     ) { padding ->
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -77,11 +112,13 @@ fun AdminProfileScreen(navController: NavController) {
                 .padding(16.dp),
             contentAlignment = Alignment.TopCenter
         ) {
+
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Foto profil (sementara pakai ikon)
+
+                // ================= FOTO PROFIL (ICON) =================
                 Box(
                     modifier = Modifier
                         .size(100.dp)
@@ -97,19 +134,22 @@ fun AdminProfileScreen(navController: NavController) {
                     )
                 }
 
+                // ================= DATA ADMIN REAL =================
                 Text(
-                    text = "Admin SafeRide",
+                    text = adminName,
                     fontWeight = FontWeight.Bold,
                     fontSize = 20.sp,
                     color = Color.Black
                 )
+
                 Text(
-                    text = "Toko: SafeRide Official Store",
+                    text = "Role: Admin",
                     fontSize = 16.sp,
                     color = Color.DarkGray
                 )
+
                 Text(
-                    text = "Email: admin@saferide.com",
+                    text = adminEmail,
                     fontSize = 14.sp,
                     color = Color.Gray
                 )
@@ -120,13 +160,14 @@ fun AdminProfileScreen(navController: NavController) {
                     onClick = {
                         navController.navigate("edit_admin")
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2)),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF1976D2)
+                    ),
                     shape = CircleShape,
                     modifier = Modifier.fillMaxWidth(0.8f)
                 ) {
                     Text("Edit Data Admin", color = Color.White)
                 }
-
             }
         }
     }

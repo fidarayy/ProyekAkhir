@@ -53,18 +53,10 @@ fun DashboardAdminScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            Icons.Default.Dashboard,
-                            contentDescription = "Dashboard",
-                            tint = Color.White,
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Dashboard Admin", color = Color.White)
-                    }
+                    Text(
+                        text = "Dashboard Admin",
+                        color = Color.White
+                    )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color(0xFF1565C0)
@@ -368,7 +360,6 @@ fun StatsCardHorizontal(users: List<UserData>) {
                 StatItemHorizontal("Total", total, Color(0xFF1976D2))
                 StatItemHorizontal("Admin", admins, Color(0xFFD32F2F))
                 StatItemHorizontal("User", regularUsers, Color(0xFF388E3C))
-                StatItemHorizontal("Connected", connected, Color(0xFF4CAF50))
             }
         }
     }
@@ -487,13 +478,6 @@ fun SimpleUserCard(
                                 )
                         )
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = if (user.connected == true) "Helmet terhubung"
-                            else "Helmet tidak terhubung",
-                            fontSize = 12.sp,
-                            color = if (user.connected == true) Color.Green
-                            else Color.Gray
-                        )
                     }
                 }
 
@@ -518,74 +502,7 @@ fun SimpleUserCard(
                     )
                 }
             }
-
             Spacer(modifier = Modifier.height(12.dp))
-
-            // Row 2: Helmet ID (jika ada) dan Action Buttons
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Helmet ID
-                if (user.helmetId != null) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            Icons.Default.Security,
-                            contentDescription = "Helmet",
-                            tint = Color(0xFF1976D2),
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = "Helmet: ${user.helmetId}",
-                            fontSize = 12.sp,
-                            color = Color(0xFF1976D2)
-                        )
-                    }
-                } else {
-                    Text(
-                        text = "Tidak ada helmet",
-                        fontSize = 12.sp,
-                        color = Color.Gray
-                    )
-                }
-
-                // Action Buttons
-                Row {
-                    // Edit Button
-                    IconButton(
-                        onClick = {
-                            navController.navigate("edit_user/${user.uid}")
-                        },
-                        modifier = Modifier.size(36.dp)
-                    ) {
-                        Icon(
-                            Icons.Default.Edit,
-                            contentDescription = "Edit",
-                            tint = Color(0xFF1976D2),
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-
-                    // Delete Button
-                    IconButton(
-                        onClick = {
-                            viewModel.deleteUser(user.uid)
-                        },
-                        modifier = Modifier.size(36.dp)
-                    ) {
-                        Icon(
-                            Icons.Default.Delete,
-                            contentDescription = "Delete",
-                            tint = Color(0xFFD32F2F),
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-                }
-            }
         }
     }
 }

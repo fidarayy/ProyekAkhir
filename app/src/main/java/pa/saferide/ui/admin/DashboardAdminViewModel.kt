@@ -3,6 +3,7 @@ package pa.saferide.ui.admin
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -27,8 +28,15 @@ class DashboardAdminViewModel : ViewModel() {
             try {
                 val snapshot = db.collection("users").get().await()
 
-                users.value = snapshot.documents.mapNotNull { doc ->
+                val list = snapshot.documents.mapNotNull { doc ->
                     val data = doc.data ?: return@mapNotNull null
+
+                    val createdAt = when (val raw = data["createdAt"]) {
+                        is Timestamp -> raw.toDate().time
+                        is Long -> raw
+                        is Double -> raw.toLong()
+                        else -> 0L
+                    }
 
                     UserData(
                         uid = doc.id,
@@ -37,9 +45,11 @@ class DashboardAdminViewModel : ViewModel() {
                         role = data["role"] as? String ?: "user",
                         helmetId = data["helmetId"] as? String ?: "",
                         connected = data["connected"] as? Boolean ?: false,
-                        createdAt = data["createdAt"] as? com.google.firebase.Timestamp
+                        createdAt = createdAt
                     )
                 }
+
+                users.value = list.sortedByDescending { it.createdAt }
 
             } catch (e: Exception) {
                 errorMessage.value = "Gagal memuat data user"
@@ -49,57 +59,46 @@ class DashboardAdminViewModel : ViewModel() {
         }
     }
 
-    // ================= DELETE USER =================
-    fun deleteUser(uid: String) {
-        viewModelScope.launch {
-            isLoading.value = true
+    // ================= UPDATE USER (FIRESTORE ONLY) =================
+//    fun updateUserProfile(
+//        uid: String,
+//        username: String,
+//        email: String,
+//        onSuccess: () -> Unit,
+//        onError: (String) -> Unit
+//    ) {
+//        viewModelScope.launch {
+//            isLoading.value = true
+//            errorMessage.value = null
+//
+//            try {
+//                db.collection("users")
+//                    .document(uid)
+//                    .update(
+//                        mapOf(
+//                            "username" to username,
+//                            "email" to email
+//                        )
+//                    )
+//                    .await()
+//
+//                users.value = users.value.map {
+//                    if (it.uid == uid) {
+//                        it.copy(username = username, email = email)
+//                    } else it
+//                }
+//
+//                onSuccess()
+//
+//            } catch (e: Exception) {
+//                onError(e.message ?: "Gagal memperbarui data user")
+//            } finally {
+//                isLoading.value = false
+//            }
+//        }
+//    }
 
-            try {
-                db.collection("users").document(uid).delete().await()
-                users.value = users.value.filterNot { it.uid == uid }
-            } catch (e: Exception) {
-                errorMessage.value = "Gagal menghapus user"
-            } finally {
-                isLoading.value = false
-            }
-        }
-    }
-
-    // ================= PAIR HELMET =================
-    fun updateUserHelmetId(uid: String, helmetId: String) {
-        viewModelScope.launch {
-            isLoading.value = true
-            errorMessage.value = null
-
-            try {
-                db.collection("users")
-                    .document(uid)
-                    .update(
-                        mapOf(
-                            "helmetId" to helmetId,
-                            "connected" to true
-                        )
-                    )
-                    .await()
-
-                users.value = users.value.map {
-                    if (it.uid == uid) {
-                        it.copy(
-                            helmetId = helmetId,
-                            connected = true
-                        )
-                    } else it
-                }
-
-            } catch (e: Exception) {
-                errorMessage.value = "Gagal memasangkan helmet"
-            } finally {
-                isLoading.value = false
-            }
-        }
-    }
-
-    // ================= UPDATE CONNECTION (INI YANG HILANG) =================
+    // ================= UPDATE CONNECTION =================
     fun updateUserConnection(uid: String, connected: Boolean) {
         viewModelScope.launch {
             try {
@@ -112,40 +111,26 @@ class DashboardAdminViewModel : ViewModel() {
                     if (it.uid == uid) it.copy(connected = connected)
                     else it
                 }
-
             } catch (e: Exception) {
-                errorMessage.value = "Gagal update status koneksi"
+                errorMessage.value = "Gagal update koneksi"
             }
         }
     }
 
-    // ================= UNPAIR HELMET =================
-    fun removeHelmetFromUser(uid: String) {
+    // ================= DELETE USER =================
+    fun deleteUser(uid: String) {
         viewModelScope.launch {
             isLoading.value = true
-
             try {
                 db.collection("users")
                     .document(uid)
-                    .update(
-                        mapOf(
-                            "helmetId" to "",
-                            "connected" to false
-                        )
-                    )
+                    .delete()
                     .await()
 
-                users.value = users.value.map {
-                    if (it.uid == uid) {
-                        it.copy(
-                            helmetId = "",
-                            connected = false
-                        )
-                    } else it
-                }
+                users.value = users.value.filterNot { it.uid == uid }
 
             } catch (e: Exception) {
-                errorMessage.value = "Gagal melepas helmet"
+                errorMessage.value = "Gagal menghapus user"
             } finally {
                 isLoading.value = false
             }

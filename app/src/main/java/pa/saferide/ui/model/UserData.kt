@@ -9,5 +9,5 @@ data class UserData(
     val role: String = "user",
     val helmetId: String? = null,
     val connected: Boolean = false,
-    val createdAt: Timestamp? = null
+    val createdAt: Long = 0L
 )

@@ -37,8 +37,8 @@ fun LoginScreen(
     onLoginSuccessAdmin: () -> Unit = {},
     onNavigateToMigration: () -> Unit = {}
 ) {
-    // PERBAIKAN: Ganti 'username' dengan 'email'
-    val email by viewModel.email // ← PASTIKAN ViewModel punya property 'email'
+
+    val email by viewModel.email
     val password by viewModel.password
     val isLoading by viewModel.isLoading
     val loginSuccess by viewModel.loginSuccess
@@ -54,8 +54,8 @@ fun LoginScreen(
     }
 
     LaunchedEffect(loginSuccess) {
-        if (loginSuccess == true) {
-            if (isAdmin) {
+        if (loginSuccess) {
+            if (isAdmin == true) {
                 onLoginSuccessAdmin()
             } else {
                 onLoginSuccessUser()
@@ -92,6 +92,7 @@ fun LoginScreen(
                     delay(300)
                     scaleAnim = 1f
                 }
+
                 val scale by animateFloatAsState(
                     targetValue = scaleAnim,
                     animationSpec = tween(600)
@@ -105,21 +106,39 @@ fun LoginScreen(
                         .background(Color.Black),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("RS", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 22.sp)
+                    Text(
+                        "RS",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 22.sp
+                    )
                 }
 
                 Spacer(Modifier.height(12.dp))
-                Text("RideSafe", fontSize = 26.sp, fontWeight = FontWeight.SemiBold, color = Color.Black)
+                Text(
+                    "RideSafe",
+                    fontSize = 26.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+
                 Spacer(Modifier.height(32.dp))
-                Text("Welcome Back", fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                Text("Login to continue your journey safely", color = Color.Gray, fontSize = 14.sp)
+                Text(
+                    "Welcome Back",
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    "Login to continue your journey safely",
+                    color = Color.Gray,
+                    fontSize = 14.sp
+                )
+
                 Spacer(Modifier.height(36.dp))
 
-                // PERBAIKAN 1: Ganti "Username" jadi "Email"
                 OutlinedTextField(
-                    value = email, // ← PAKAI email, BUKAN username
-                    onValueChange = { viewModel.onEmailChange(it) }, // ← PAKAI onEmailChange
-                    label = { Text("Email") }, // ← Label "Email"
+                    value = email,
+                    onValueChange = { viewModel.onEmailChange(it) },
+                    label = { Text("Email") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -131,11 +150,19 @@ fun LoginScreen(
                     onValueChange = { viewModel.onPasswordChange(it) },
                     label = { Text("Password") },
                     singleLine = true,
-                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    visualTransformation = if (passwordVisible)
+                        VisualTransformation.None
+                    else
+                        PasswordVisualTransformation(),
                     trailingIcon = {
-                        val icon = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
+                        val icon =
+                            if (passwordVisible)
+                                Icons.Filled.Visibility
+                            else
+                                Icons.Filled.VisibilityOff
+
                         IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                            Icon(imageVector = icon, contentDescription = null)
+                            Icon(icon, contentDescription = null)
                         }
                     },
                     modifier = Modifier.fillMaxWidth()
@@ -149,7 +176,9 @@ fun LoginScreen(
                         .fillMaxWidth()
                         .height(50.dp),
                     shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2)),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF1976D2)
+                    ),
                     enabled = !isLoading
                 ) {
                     if (isLoading) {
@@ -159,12 +188,16 @@ fun LoginScreen(
                             modifier = Modifier.size(24.dp)
                         )
                     } else {
-                        Text("Login", color = Color.White, fontWeight = FontWeight.Medium)
+                        Text(
+                            "Login",
+                            color = Color.White,
+                            fontWeight = FontWeight.Medium
+                        )
                     }
                 }
 
-                // PERBAIKAN 2: Fix error message display
-                if (loginSuccess == false || errorMessage != null) {
+                // ✅ PERBAIKAN UTAMA (HANYA INI)
+                if (errorMessage != null) {
                     Spacer(Modifier.height(16.dp))
                     Text(
                         text = errorMessage ?: "Email atau password salah",
