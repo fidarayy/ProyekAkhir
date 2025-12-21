@@ -9,9 +9,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import java.util.UUID
 
-class BluetoothManagerHelper(
-    private val context: Context
-) {
+class BluetoothManagerHelper(context: Context) {
 
     private val ESP32_UUID =
         UUID.fromString("00001101-0000-1000-8000-00805F9B34FB") // SPP

@@ -1,6 +1,7 @@
 package pa.saferide.ui.screen
 
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -11,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -30,6 +32,7 @@ fun DashboardScreen(navController: NavController) {
     val currentUser = auth.currentUser ?: return
     val uid = currentUser.uid
 
+    // ❗ LOGIKA ASLI KAMU (TIDAK DIUBAH)
     val username =
         currentUser.displayName
             ?: currentUser.email?.substringBefore("@")
@@ -109,28 +112,21 @@ fun DashboardScreen(navController: NavController) {
     Scaffold(
         bottomBar = {
 
-            // 🔥 BOTTOM NAVIGATION FIXED
             NavigationBar(
                 containerColor = Color.White,
                 tonalElevation = 8.dp
             ) {
 
-                // ===== HOME =====
                 NavigationBarItem(
                     selected = true,
                     onClick = {},
-                    icon = {
-                        Icon(Icons.Default.Home, null)
-                    },
+                    icon = { Icon(Icons.Default.Home, null) },
                     label = { Text("Home") }
                 )
 
-                // ===== DEVICE (TENGAH – BULAT BESAR) =====
                 NavigationBarItem(
                     selected = false,
-                    onClick = {
-                        navController.navigate("device")
-                    },
+                    onClick = { navController.navigate("device") },
                     icon = {
                         Box(
                             modifier = Modifier
@@ -152,94 +148,149 @@ fun DashboardScreen(navController: NavController) {
                     label = { Text("Device") }
                 )
 
-                // ===== PROFILE =====
                 NavigationBarItem(
                     selected = false,
-                    onClick = {
-                        navController.navigate("profile")
-                    },
-                    icon = {
-                        Icon(Icons.Default.Person, null)
-                    },
+                    onClick = { navController.navigate("profile") },
+                    icon = { Icon(Icons.Default.Person, null) },
                     label = { Text("Profile") }
                 )
             }
         }
     ) { padding ->
 
-        Column(
+        // ================= PERUBAHAN UI SAJA =================
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(background)
-                .padding(padding)
-                .padding(20.dp)
         ) {
 
-            HeaderSection(username)
+            // 🎈 BACKGROUND BALON (VISUAL ONLY)
+            BalloonBackground()
 
-            Spacer(Modifier.height(28.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(20.dp)
             ) {
 
-                AnimatedStatBox(
-                    "Total Perjalanan",
-                    totalTrips.toString(),
-                    Icons.Default.DirectionsBike,
-                    Color(0xFF2E86FF),
-                    0
-                )
+                HeaderSection(username)
 
-                AnimatedStatBox(
-                    "Device Status",
-                    if (lastNotif == "NGANTUK") "Warning" else "Connected",
-                    Icons.Default.Bolt,
-                    if (lastNotif == "NGANTUK") Color.Red else Color(0xFF43A047),
-                    150
-                )
+                Spacer(Modifier.height(28.dp))
 
-                AnimatedStatBox(
-                    "Peringatan",
-                    warningCount.toString(),
-                    Icons.Default.Warning,
-                    Color(0xFFFFC107),
-                    300
-                )
-            }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
 
-            Spacer(Modifier.height(28.dp))
-
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(18.dp)
-            ) {
-                Column(Modifier.padding(16.dp)) {
-
-                    Text(
-                        deviceStatusText,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 16.sp,
-                        color = deviceStatusColor
+                    AnimatedStatBox(
+                        "Total Perjalanan",
+                        totalTrips.toString(),
+                        Icons.Default.DirectionsBike,
+                        Color(0xFF2E86FF),
+                        0
                     )
 
-                    Spacer(Modifier.height(8.dp))
-
-                    Text(
-                        "Status terakhir: $lastNotif",
-                        fontSize = 13.sp,
-                        color = Color.Gray
+                    AnimatedStatBox(
+                        "Device Status",
+                        if (lastNotif == "NGANTUK") "Warning" else "Connected",
+                        Icons.Default.Bolt,
+                        if (lastNotif == "NGANTUK") Color.Red else Color(0xFF43A047),
+                        150
                     )
 
-                    Text(
-                        "Waktu: $lastNotifTime",
-                        fontSize = 12.sp,
-                        color = Color.Gray
+                    AnimatedStatBox(
+                        "Peringatan",
+                        warningCount.toString(),
+                        Icons.Default.Warning,
+                        Color(0xFFFFC107),
+                        300
                     )
+                }
+
+                Spacer(Modifier.height(28.dp))
+
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(18.dp)
+                ) {
+                    Column(Modifier.padding(16.dp)) {
+
+                        Text(
+                            deviceStatusText,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 16.sp,
+                            color = deviceStatusColor
+                        )
+
+                        Spacer(Modifier.height(8.dp))
+
+                        Text(
+                            "Status terakhir: $lastNotif",
+                            fontSize = 13.sp,
+                            color = Color.Gray
+                        )
+
+                        Text(
+                            "Waktu: $lastNotifTime",
+                            fontSize = 12.sp,
+                            color = Color.Gray
+                        )
+                    }
                 }
             }
         }
+    }
+}
+
+/* ================= BALLOON BACKGROUND (UI ONLY) ================= */
+
+@Composable
+fun BalloonBackground() {
+
+    val floatAnim by rememberInfiniteTransition(label = "")
+        .animateFloat(
+            initialValue = -15f,
+            targetValue = 15f,
+            animationSpec = infiniteRepeatable(
+                tween(7000, easing = LinearEasing),
+                RepeatMode.Reverse
+            ),
+            label = ""
+        )
+
+    Canvas(modifier = Modifier.fillMaxSize()) {
+
+        drawCircle(
+            color = Color(0xFFDDEAFF),
+            radius = size.minDimension * 0.38f,
+            center = Offset(
+                x = size.width * 0.15f,
+                y = size.height * 0.18f + floatAnim
+            ),
+            alpha = 0.6f
+        )
+
+        drawCircle(
+            color = Color(0xFFE8F0FF),
+            radius = size.minDimension * 0.45f,
+            center = Offset(
+                x = size.width * 0.85f,
+                y = size.height * 0.35f - floatAnim
+            ),
+            alpha = 0.5f
+        )
+
+        drawCircle(
+            color = Color(0xFFEDF4FF),
+            radius = size.minDimension * 0.30f,
+            center = Offset(
+                x = size.width * 0.25f,
+                y = size.height * 0.85f + floatAnim
+            ),
+            alpha = 0.55f
+        )
     }
 }
 

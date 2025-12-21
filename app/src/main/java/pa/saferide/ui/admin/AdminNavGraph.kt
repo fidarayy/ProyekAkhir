@@ -1,7 +1,5 @@
 package pa.saferide.ui.admin
 
-import android.bluetooth.BluetoothDevice
-
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController

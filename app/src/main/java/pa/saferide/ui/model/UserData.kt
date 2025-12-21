@@ -1,7 +1,5 @@
 package pa.saferide.ui.model
 
-import com.google.firebase.Timestamp
-
 data class UserData(
     val uid: String = "",
     val username: String = "",

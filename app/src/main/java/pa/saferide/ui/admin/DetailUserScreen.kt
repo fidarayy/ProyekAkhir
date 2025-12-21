@@ -34,7 +34,6 @@ fun DetailUserScreen(
     val scope = rememberCoroutineScope()
 
     var showDeleteDialog by remember { mutableStateOf(false) }
-    var showUnpairDialog by remember { mutableStateOf(false) }
 
     // Load user sekali saja
     LaunchedEffect(Unit) {
@@ -188,18 +187,6 @@ fun DetailUserScreen(
                                         Icon(Icons.Default.LinkOff, null)
                                         Spacer(Modifier.width(8.dp))
                                         Text("PUTUSKAN KONEKSI")
-                                    }
-
-                                    Button(
-                                        onClick = { showUnpairDialog = true },
-                                        modifier = Modifier.fillMaxWidth(),
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = Color(0xFFD32F2F)
-                                        )
-                                    ) {
-                                        Icon(Icons.Default.Delete, null)
-                                        Spacer(Modifier.width(8.dp))
-                                        Text("LEPAS HELMET")
                                     }
                                 }
                                 OutlinedButton(
