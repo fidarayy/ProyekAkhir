@@ -19,26 +19,43 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminProfileScreen(navController: NavController) {
 
-    // ================= FIREBASE AUTH =================
-    val admin = FirebaseAuth.getInstance().currentUser
+    // ================= AUTH =================
+    val auth = FirebaseAuth.getInstance()
+    val adminUid = auth.currentUser?.uid ?: return
 
-    val adminName =
-        admin?.displayName
-            ?: admin?.email?.substringBefore("@")
-            ?: "Admin"
+    // ================= STATE =================
+    var adminName by remember { mutableStateOf("Loading...") }
+    var adminEmail by remember { mutableStateOf("-") }
+    var adminRole by remember { mutableStateOf("Admin") }
 
-    val adminEmail =
-        admin?.email ?: "-"
+    // ================= DATABASE =================
+    LaunchedEffect(Unit) {
+        val dbRef = FirebaseDatabase.getInstance()
+            .getReference("admins")
+            .child(adminUid)
 
+        dbRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                adminName = snapshot.child("name").getValue(String::class.java) ?: "Admin"
+                adminEmail = snapshot.child("email").getValue(String::class.java) ?: "-"
+                adminRole = snapshot.child("role").getValue(String::class.java) ?: "Admin"
+            }
+
+            override fun onCancelled(error: DatabaseError) {}
+        })
+    }
+
+    // ================= UI =================
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Profil Admin", color = Color.Black) },
+                title = { Text("Profil Admin") },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.White
                 )
@@ -85,7 +102,7 @@ fun AdminProfileScreen(navController: NavController) {
 
                 NavigationBarItem(
                     selected = true,
-                    onClick = { /* sudah di profile */ },
+                    onClick = {},
                     icon = {
                         Icon(
                             Icons.Default.Person,
@@ -93,11 +110,10 @@ fun AdminProfileScreen(navController: NavController) {
                             tint = Color(0xFF1976D2)
                         )
                     },
-                    label = { Text("Profile", color = Color.Black) }
+                    label = { Text("Profile") }
                 )
             }
-        },
-        containerColor = Color.Transparent
+        }
     ) { padding ->
 
         Box(
@@ -118,7 +134,7 @@ fun AdminProfileScreen(navController: NavController) {
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
 
-                // ================= FOTO PROFIL (ICON) =================
+                // ================= FOTO PROFIL =================
                 Box(
                     modifier = Modifier
                         .size(100.dp)
@@ -134,16 +150,15 @@ fun AdminProfileScreen(navController: NavController) {
                     )
                 }
 
-                // ================= DATA ADMIN REAL =================
+                // ================= DATA ADMIN =================
                 Text(
                     text = adminName,
-                    fontWeight = FontWeight.Bold,
                     fontSize = 20.sp,
-                    color = Color.Black
+                    fontWeight = FontWeight.Bold
                 )
 
                 Text(
-                    text = "Role: Admin",
+                    text = "Role: $adminRole",
                     fontSize = 16.sp,
                     color = Color.DarkGray
                 )
@@ -160,10 +175,10 @@ fun AdminProfileScreen(navController: NavController) {
                     onClick = {
                         navController.navigate("edit_admin")
                     },
+                    shape = CircleShape,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFF1976D2)
                     ),
-                    shape = CircleShape,
                     modifier = Modifier.fillMaxWidth(0.8f)
                 ) {
                     Text("Edit Data Admin", color = Color.White)
